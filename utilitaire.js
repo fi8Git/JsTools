@@ -123,17 +123,55 @@ Array.prototype.groupBy = function (key) {
     }, []);
 }
 
+/**
+ * Retourne la différence entre deux tableaux.
+ * @param {Array} arrayToCompare 
+ * @param {String} key 
+ */
+ Array.prototype.getDifference = function (arrayToCompare, key = null){
+
+    let arr1 = this;
+    let arr2 = arrayToCompare;
+
+    if(arr1.length !== arr2.length && arr1.length < arr2.length){
+        arr1 = arrayToCompare;
+        arr2 = this;
+    }
+
+    if(key != null)
+        return arr1.filter(x => !arr2.some(y => x[key] == y[key]));
+
+    if(this.every(x => typeof x === "object"))
+        return arr1.filter(x => !arr2.some(y => objectsAreEqual(x, y)));
+    
+    return arr1.filter(x => !arr2.includes(x));
+}
+
+/**
+ * Retourne les données présentes dans les deux tableaux.
+ * @param {Array} arrayToCompare 
+ * @param {String} key 
+ */
+Array.prototype.getIntersection = function (arrayToCompare, key = null){
+    if(key != null)
+        return this.filter(data => arrayToCompare.some(x => x[key] == data[key]));
+    
+    if(this.every(x => typeof x === "object"))
+        return this.filter(data => arrayToCompare.some(x => objectsAreEqual(data, x)));
+    
+    return this.filter(data => arrayToCompare.includes(data));
+}
+
 //#endregion
 
 //#region Object extensions
-
 /**
  * Vérifie si deux objets contiennent les mêmes données.
  * 
- * @param {Object} object
- * @param {Object} objectToCompare
+ * @param {Object} object objet d'origine
+ * @param {Object} objectToCompare objet à comparer
  */
-function objectsAreEqual(object, objectToCompare){
+ function objectsAreEqual(object, objectToCompare){
     if(typeof object !== "object" || typeof objectToCompare !== "object")
         return false;
 
@@ -142,17 +180,14 @@ function objectsAreEqual(object, objectToCompare){
 
     if(Object.keys(object).length !== Object.keys(objectToCompare).length)
         return false;
+
+    if(!Object.keys(object).hasSameData(Object.keys(objectToCompare)))
+        return false;
     
     for(const prop in object){
-        if(objectToCompare[prop] == undefined)
-            return false;
-
-        if(Array.isArray(object[prop])){
+        if(Array.isArray(object[prop]))
             if(!object[prop].arrayObjectHasSameData(objectToCompare[prop]))
                 return false;
-
-            return true;
-        }
         
         if(object[prop] !== objectToCompare[prop])
             return false;
@@ -160,6 +195,7 @@ function objectsAreEqual(object, objectToCompare){
 
     return true;
 }
+
 
 /**
  * Créer une copie complète de l'objet.
